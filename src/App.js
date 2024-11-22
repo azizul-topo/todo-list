@@ -9,11 +9,19 @@ import lightTheme from "Theme/lightTheme";
 // Import Local Storage
 import useLocalStorage from "Hooks/useLocalStorage";
 
-// Import theme provider from styled components
+// Import theme provider from styled-components
 import { ThemeProvider } from "styled-components";
 
 // Import Pages
 import HomePage from "Pages/HomePage/HomePage";
+import AuthForm from "Components/AuthForm";
+
+// Helper function to check login status
+const isLoggedIn = () => {
+  // Retrieve the token or login flag from sessionStorage
+  const token = sessionStorage.getItem("authToken");
+  return !!token; // Returns true if token exists, otherwise false
+};
 
 function App() {
   // State to store the current theme of the website
@@ -29,6 +37,7 @@ function App() {
     "checkedSwitch",
     JSON.stringify(false)
   );
+
   /**
    * Function to toggle the theme of the website
    * It will change the theme from light to dark and vice versa
@@ -54,21 +63,37 @@ function App() {
       setCheckedSwitch(JSON.stringify(false));
     else setCheckedSwitch(JSON.stringify(true));
   };
+
   useEffect(() => {
-    document.title = "TO DO LIST ";
+    document.title = "TO DO LIST";
   }, []);
+
   return (
     <ThemeProvider theme={JSON.parse(theme)}>
-      <HashRouter>
+      <HashRouter basename="/#">
+
         <Routes>
-          <Route path="" element={<Navigate to="/all-tasks" />} />
+          {/* Conditional default route based on login status */}
+          <Route
+            path="/"
+            element={
+              isLoggedIn() ? <Navigate to="/all-tasks" /> : <Navigate to="/auth" />
+            }
+          />
+          {/* Auth route */}
+          <Route path="/auth" element={<AuthForm />} />
+          {/* All Tasks (protected) */}
           <Route
             path="/*"
             element={
-              <HomePage
-                handleToggleTheme={handleToggleTheme}
-                checkedSwitch={checkedSwitch}
-              />
+              isLoggedIn() ? (
+                <HomePage
+                  handleToggleTheme={handleToggleTheme}
+                  checkedSwitch={checkedSwitch}
+                />
+              ) : (
+                <Navigate to="/auth" />
+              )
             }
           />
         </Routes>
